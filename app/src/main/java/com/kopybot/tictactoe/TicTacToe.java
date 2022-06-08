@@ -22,7 +22,7 @@ public class TicTacToe {
         winner = "";
     }
     public boolean isWon() {
-        if (!iso) {
+        if (iso) {
             if (board[1][1] == 'o'){
                 if ((board[1][2] == 'o' && board[1][0] == 'o')||(board[0][1] == 'o'&& board[2][1] == 'o')||(board[2][2] == 'o' && board[0][0] == 'o')||(board[0][2] == 'o' && board[2][0] == 'o')) {
                     winner = "O";
@@ -122,5 +122,8 @@ public class TicTacToe {
             return false;
         }
         return true;
+    }
+    public char[][] getBoard() {
+        return board;
     }
 }

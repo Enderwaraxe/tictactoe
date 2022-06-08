@@ -56,7 +56,7 @@
                 android:layout_width="73dp"
                 android:layout_height="73dp"
                 android:background="@color/white"
-                android:onClick="place"
+                android:onClick="humanMove"
                 android:padding="3dp"
                 android:scaleType="fitXY" />
 
@@ -66,7 +66,7 @@
                 android:layout_height="73dp"
                 android:layout_marginStart="4dp"
                 android:background="@color/white"
-                android:onClick="place"
+                android:onClick="humanMove"
                 android:padding="3dp"
                 android:scaleType="fitXY" />
 
@@ -76,7 +76,7 @@
                 android:layout_height="73dp"
                 android:layout_marginStart="4dp"
                 android:background="@color/white"
-                android:onClick="place"
+                android:onClick="humanMove"
                 android:padding="3dp"
                 android:scaleType="fitXY" />
         </TableRow>
@@ -89,7 +89,7 @@
                 android:layout_height="73dp"
                 android:layout_marginTop="4dp"
                 android:background="@color/white"
-                android:onClick="place"
+                android:onClick="humanMove"
                 android:padding="3dp"
                 android:scaleType="fitXY"
 
@@ -102,7 +102,7 @@
                 android:layout_marginStart="4dp"
                 android:layout_marginTop="4dp"
                 android:background="@color/white"
-                android:onClick="place"
+                android:onClick="humanMove"
                 android:padding="3dp"
                 android:scaleType="fitXY" />
 
@@ -113,7 +113,7 @@
                 android:layout_marginStart="4dp"
                 android:layout_marginTop="4dp"
                 android:background="@color/white"
-                android:onClick="place"
+                android:onClick="humanMove"
                 android:padding="3dp"
                 android:scaleType="fitXY" />
         </TableRow>
@@ -127,7 +127,7 @@
                 android:layout_height="73dp"
                 android:layout_marginTop="4dp"
                 android:background="@color/white"
-                android:onClick="place"
+                android:onClick="humanMove"
                 android:padding="3dp"
                 android:scaleType="fitXY" />
 
@@ -138,7 +138,7 @@
                 android:layout_marginStart="4dp"
                 android:layout_marginTop="4dp"
                 android:background="@color/white"
-                android:onClick="place"
+                android:onClick="humanMove"
                 android:padding="3dp"
                 android:scaleType="fitXY" />
 
@@ -149,7 +149,7 @@
                 android:layout_marginStart="4dp"
                 android:layout_marginTop="4dp"
                 android:background="@color/white"
-                android:onClick="place"
+                android:onClick="humanMove"
                 android:padding="3dp"
                 android:scaleType="fitXY" />
         </TableRow>
