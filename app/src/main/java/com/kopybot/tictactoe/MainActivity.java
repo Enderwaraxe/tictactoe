@@ -4,21 +4,19 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
-import java.util.*;
-import java.util.Timer;
-import java.util.TimerTask;
+
 public class MainActivity extends AppCompatActivity {
-    TicTacToe model = new TicTacToe();
+    TicTacToeModel model = new TicTacToeModel();
     TextView currentturn;
     Switch bot1;
     Switch bot2;
+    BotMiniMax bot = new BotMiniMax();
     private static final int DELAY = 500;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,7 +25,8 @@ public class MainActivity extends AppCompatActivity {
         currentturn = (TextView) findViewById(R.id.textViewturn);
         bot1 = (Switch) findViewById(R.id.switchplayer1);
         bot2 = (Switch) findViewById(R.id.switchplayer2);
-        Log.d("MainActivity", "Tic Tac Toe");
+//        Log.d("MainActivity", "Tic Tac Toe");
+        bot.start();
     }
 
 
@@ -46,11 +45,7 @@ public class MainActivity extends AppCompatActivity {
     public void humanMove(View view) {
         ImageView b = (ImageView) view;
         b.setEnabled(false);
-        if (model.checkTurn()) {
-            currentturn.setText("X's Turn");
-        } else {
-            currentturn.setText("O's Turn");
-        }
+
         int move = 0;
         switch (b.getId()) {
             case R.id.button1:
@@ -82,16 +77,16 @@ public class MainActivity extends AppCompatActivity {
                 break;
             default:
         }
-        Log.i("PlayerMove", ""+move);
-        model.changePos(move);
-        if (model.checkTurn()) {
+//        Log.i("PlayerMove", ""+move);
+        model.move(move);
+        currentturn.setText((model.nextPlayer()+"").toUpperCase() +"'s Turn");
+        if (model.justPlayed()=='o') {
             b.setImageResource(R.drawable.download4);
         } else {
             b.setImageResource(R.drawable.x);
         }
         if (!handleEnd()) {
-            model.changeTurn();
-            Log.i("BotMove", "Started");
+//            Log.i("BotMove", "Started");
             if (bot1.isChecked() || bot2.isChecked()) {
                 disableall();
                 new Handler().postDelayed(() -> botMove(), DELAY);
@@ -146,65 +141,62 @@ public class MainActivity extends AppCompatActivity {
     public void botMove() {
         //play move
         ImageView currentbutton = null;
-        if (model.checkTurn()) {
-            currentturn.setText("X's Turn");
-        } else {
-            currentturn.setText("O's Turn");
-        }
-        int bot1move = (int) (Math.random() * 9) + 1;
-        while (!model.isTaken(bot1move)) {
-            bot1move = (int) (Math.random() * 9) + 1;
-        }
-        Log.i("Botmove", "" + bot1move);
+        int bot1move;
+        bot1move = bot.findMove(model);
+//        int bot1move = (int) (Math.random() * 9) + 1;
+//        while (model.isTaken(bot1move)) {
+//            bot1move = (int) (Math.random() * 9) + 1;
+//        }
+//        Log.i("Botmove", "" + bot1move);
         switch (bot1move) {
             case 1:
-                model.changePos(1);
+                model.move(1);
                 currentbutton = (ImageView) findViewById(R.id.button1);
                 break;
             case 2:
-                model.changePos(2);
+                model.move(2);
                 currentbutton = (ImageView) findViewById(R.id.button2);
                 break;
             case 3:
-                model.changePos(3);
+                model.move(3);
                 currentbutton = (ImageView) findViewById(R.id.button3);
                 break;
             case 4:
-                model.changePos(4);
+                model.move(4);
                 currentbutton = (ImageView) findViewById(R.id.button4);
                 break;
             case 5:
-                model.changePos(5);
+                model.move(5);
                 currentbutton = (ImageView) findViewById(R.id.button5);
                 break;
             case 6:
-                model.changePos(6);
+                model.move(6);
                 currentbutton = (ImageView) findViewById(R.id.button6);
                 break;
             case 7:
-                model.changePos(7);
+                model.move(7);
                 currentbutton = (ImageView) findViewById(R.id.button7);
                 break;
             case 8:
-                model.changePos(8);
+                model.move(8);
                 currentbutton = (ImageView) findViewById(R.id.button8);
                 break;
             case 9:
-                model.changePos(9);
+                model.move(9);
                 currentbutton = (ImageView) findViewById(R.id.button9);
                 break;
             default:
         }
-        if (model.checkTurn()) {
+        if (model.justPlayed() == 'o') {
             currentbutton.setImageResource(R.drawable.download4);
         } else {
             currentbutton.setImageResource(R.drawable.x);
         }
+        currentturn.setText((model.nextPlayer()+"").toUpperCase() +"'s Turn");
         currentbutton.setEnabled(false);
         enableall();
         if (!handleEnd()) {
-            model.changeTurn();
-            Log.i("BotMove", "Started");
+//            Log.i("BotMove", "Started");
             if (bot1.isChecked() && bot2.isChecked()) {
                 disableall();
                 new Handler().postDelayed(() -> botMove(), DELAY);
@@ -240,23 +232,16 @@ public class MainActivity extends AppCompatActivity {
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
     }
     public boolean handleEnd() {
-        Log.i("Board",Arrays.deepToString(model.getBoard()));
-        Log.i("Turn", model.checkTurn()?"O":"X");
-        if (model.isWon() || model.isTie()) {
+        if (!model.getStatus().equals("")) {
             TextView xwins = (TextView) findViewById(R.id.xwins);
             TextView ties = (TextView) findViewById(R.id.ties);
             TextView owins = (TextView) findViewById(R.id.owins);
             xwins.setText("X wins: " + model.getXwins());
             owins.setText("O wins: " + model.getOwins());
             ties.setText("Ties: " + model.getTies());
-
-            if (model.isTie()) {
-                currentturn.setText("Tie!");
-            } else {
-                currentturn.setText(model.winner() + " wins!");
-            }
+            currentturn.setText(model.getStatus());
             disableButton();
-            Log.i("handleEnd", "Game Finsihed");
+//            Log.i("handleEnd", "Game Finsihed");
             return true;
         }
         return false;
