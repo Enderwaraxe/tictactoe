@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">tictactoe</string>
+    <string-array name="player_options">
+        <item>Human Player</item>
+        <item>Random Bot</item>
+        <item>MiniMax Bot</item>
+    </string-array>
 </resources>

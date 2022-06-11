@@ -7,29 +7,64 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
     TicTacToeModel model = new TicTacToeModel();
     TextView currentturn;
     Switch bot1;
     Switch bot2;
     BotMiniMax bot = new BotMiniMax();
+    RandomBot bot_2 = new RandomBot();
+    Spinner xspinner;
+    Spinner ospinner;
+    String playerx;
+    String playero;
     private static final int DELAY = 500;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         currentturn = (TextView) findViewById(R.id.textViewturn);
-        bot1 = (Switch) findViewById(R.id.switchplayer1);
-        bot2 = (Switch) findViewById(R.id.switchplayer2);
+        xspinner = (Spinner) findViewById(R.id.spinnerx);
+        ospinner = (Spinner) findViewById(R.id.spinnero);
 //        Log.d("MainActivity", "Tic Tac Toe");
         bot.start();
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.player_options, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        xspinner.setAdapter(adapter);
+        xspinner.setOnItemSelectedListener(this);
+        ospinner.setAdapter(adapter);
+        ospinner.setOnItemSelectedListener(this);
+    }
+    @Override
+    public void onItemSelected(AdapterView<?> spinnerview, View view, int position, long id)
+    {
+        Spinner b = (Spinner) spinnerview;
+
+        switch (b.getId()) {
+            case R.id.spinnerx:
+                playerx = spinnerview.getSelectedItem().toString();
+                break;
+            case R.id.spinnero:
+                playero = spinnerview.getSelectedItem().toString();
+                break;
+            default:
+        }
+        reset(view);
     }
 
-
+    @Override
+    public void onNothingSelected(AdapterView<?> arg0)
+    {
+        return;
+    }
     public void begin(View view) {
         model.reset();
         model.setzero();
@@ -87,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
         }
         if (!handleEnd()) {
 //            Log.i("BotMove", "Started");
-            if (bot1.isChecked() || bot2.isChecked()) {
+            if (!playerx.equals("Human Player") || !playero.equals("Human Player")) {
                 disableall();
                 new Handler().postDelayed(() -> botMove(), DELAY);
             }
@@ -125,28 +160,38 @@ public class MainActivity extends AppCompatActivity {
         currentbutton.setEnabled(true);
         currentbutton.setImageDrawable(null);
 
-        if (bot1.isChecked()) {
+        if (!playerx.equals("Human Player")) {
             disableall();
             new Handler().postDelayed(() -> botMove(), DELAY);
         }
     }
 
-    public void switched(View view) {
-//        Switch s = (Switch) view;
-//        if (!s.isChecked()) {
-        reset(view);
-//        }
-    }
-
     public void botMove() {
         //play move
         ImageView currentbutton = null;
-        int bot1move;
-        bot1move = bot.findMove(model);
-//        int bot1move = (int) (Math.random() * 9) + 1;
-//        while (model.isTaken(bot1move)) {
-//            bot1move = (int) (Math.random() * 9) + 1;
-//        }
+        int bot1move = 0;
+        if (model.nextPlayer() == 'x') {
+            switch(playerx) {
+                case "Random Bot" :
+                    bot1move = bot_2.findMove(model);
+                    break;
+                case "MiniMax Bot":
+                    bot1move = bot.findMove(model);
+                    break;
+                default:
+            }
+        }
+        else {
+            switch(playero) {
+                case "Random Bot" :
+                    bot1move = bot_2.findMove(model);
+                    break;
+                case "MiniMax Bot":
+                    bot1move = bot.findMove(model);
+                    break;
+                default:
+            }
+        }
 //        Log.i("Botmove", "" + bot1move);
         switch (bot1move) {
             case 1:
@@ -187,6 +232,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             default:
         }
+        Log.i("bot", "" + bot1move);
         if (model.justPlayed() == 'o') {
             currentbutton.setImageResource(R.drawable.download4);
         } else {
@@ -195,9 +241,10 @@ public class MainActivity extends AppCompatActivity {
         currentturn.setText((model.nextPlayer()+"").toUpperCase() +"'s Turn");
         currentbutton.setEnabled(false);
         enableall();
+
         if (!handleEnd()) {
 //            Log.i("BotMove", "Started");
-            if (bot1.isChecked() && bot2.isChecked()) {
+            if (!playerx.equals("Human Player") && !playero.equals("Human Player")) {
                 disableall();
                 new Handler().postDelayed(() -> botMove(), DELAY);
             }
