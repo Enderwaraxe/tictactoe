@@ -137,8 +137,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             move = playero.findMove(model);
         }
         ImageView currentbutton = (ImageView) board.getChildAt(move - 1);
-        handleMove(move, currentbutton);
         enableTouch();
+        handleMove(move, currentbutton);
+
     }
 
     private void handleMove(int move, ImageView currentbutton) {
