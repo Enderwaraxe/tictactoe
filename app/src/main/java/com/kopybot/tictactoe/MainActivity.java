@@ -1,31 +1,33 @@
 package com.kopybot.tictactoe;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.Spinner;
-import android.widget.Switch;
 import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
-    TicTacToeModel model = new TicTacToeModel();
-    TextView currentturn;
-    Switch bot1;
-    Switch bot2;
-    BotMiniMax bot = new BotMiniMax();
-    RandomBot bot_2 = new RandomBot();
-    Spinner xspinner;
-    Spinner ospinner;
-    String playerx;
-    String playero;
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
     private static final int DELAY = 500;
+    private TicTacToeGame model = new TicTacToeGame();
+    private BotPlayer playerx;
+    private BotPlayer playero;
+    private BotMiniMax minimaxBot = new BotMiniMax();
+    private RandomBot randomBot = new RandomBot();
+    TextView xwins;
+    TextView ties;
+    TextView owins;
+    private TextView currentturn;
+    private Spinner xspinner;
+    private Spinner ospinner;
+    private ConstraintLayout board;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,8 +35,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         currentturn = (TextView) findViewById(R.id.textViewturn);
         xspinner = (Spinner) findViewById(R.id.spinnerx);
         ospinner = (Spinner) findViewById(R.id.spinnero);
-//        Log.d("MainActivity", "Tic Tac Toe");
-        bot.start();
+        board = (ConstraintLayout) findViewById(R.id.board);
+        xwins = (TextView) findViewById(R.id.xwins);
+        ties = (TextView) findViewById(R.id.ties);
+        owins = (TextView) findViewById(R.id.owins);
+        minimaxBot.boot();
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.player_options, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -43,34 +48,76 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         ospinner.setAdapter(adapter);
         ospinner.setOnItemSelectedListener(this);
     }
-    @Override
-    public void onItemSelected(AdapterView<?> spinnerview, View view, int position, long id)
-    {
-        Spinner b = (Spinner) spinnerview;
 
+    @Override
+    public void onItemSelected(AdapterView<?> spinnerview, View view, int position, long id) {
+        Spinner b = (Spinner) spinnerview;
         switch (b.getId()) {
             case R.id.spinnerx:
-                playerx = spinnerview.getSelectedItem().toString();
+                switch (spinnerview.getSelectedItem().toString()) {
+                    case "Random Bot":
+                        playerx = randomBot;
+                        break;
+                    case "MiniMax Bot":
+                        playerx = minimaxBot;
+                        break;
+                    default:
+                        playerx = null;
+                }
                 break;
             case R.id.spinnero:
-                playero = spinnerview.getSelectedItem().toString();
+                switch (spinnerview.getSelectedItem().toString()) {
+                    case "Random Bot":
+                        playero = randomBot;
+                        break;
+                    case "MiniMax Bot":
+                        playero = minimaxBot;
+                        break;
+                    default:
+                        playero = null;
+                }
                 break;
             default:
         }
         reset(view);
     }
-
     @Override
-    public void onNothingSelected(AdapterView<?> arg0)
-    {
+    public void onNothingSelected(AdapterView<?> arg0) {
         return;
     }
-    public void begin(View view) {
+
+    public void reset(View view) {
+        model.reset();
+        currentturn.setText("X's Turn");
+        for (int i = 0; i < 9; i++) {
+            ImageView currentbutton = (ImageView) board.getChildAt(i);
+            currentbutton.setEnabled(true);
+            currentbutton.setImageDrawable(null);
+        }
+        if (playerx != null) {
+            disableTouch();
+            new Handler().postDelayed(() -> botMove(), DELAY);
+        }
+    }
+
+    public void disableTouch() {
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+    }
+    public void enableTouch() {
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+    }
+
+    public void disableButton() {
+        for (int i = 0; i < 9; i++) {
+            ImageView currentbutton = (ImageView) board.getChildAt(i);
+            currentbutton.setEnabled(false);
+        }
+    }
+
+    public void startNewPressed(View view) {
         model.reset();
         model.setzero();
-        TextView xwins = (TextView) findViewById(R.id.xwins);
-        TextView ties = (TextView) findViewById(R.id.ties);
-        TextView owins = (TextView) findViewById(R.id.owins);
         xwins.setText("X wins: " + model.getXwins());
         owins.setText("O wins: " + model.getOwins());
         ties.setText("Ties: " + model.getTies());
@@ -78,219 +125,69 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     public void humanMove(View view) {
-        ImageView b = (ImageView) view;
-        b.setEnabled(false);
-
-        int move = 0;
-        switch (b.getId()) {
-            case R.id.button1:
-                move=1;
-                break;
-            case R.id.button2:
-                move=2;
-                break;
-            case R.id.button3:
-                move=3;
-                break;
-            case R.id.button4:
-                move=4;
-                break;
-            case R.id.button5:
-                move=5;
-                break;
-            case R.id.button6:
-                move=6;
-                break;
-            case R.id.button7:
-                move=7;
-                break;
-            case R.id.button8:
-                move=8;
-                break;
-            case R.id.button9:
-                move=9;
-                break;
-            default:
-        }
-//        Log.i("PlayerMove", ""+move);
-        model.move(move);
-        currentturn.setText((model.nextPlayer()+"").toUpperCase() +"'s Turn");
-        if (model.justPlayed()=='o') {
-            b.setImageResource(R.drawable.download4);
-        } else {
-            b.setImageResource(R.drawable.x);
-        }
-        if (!handleEnd()) {
-//            Log.i("BotMove", "Started");
-            if (!playerx.equals("Human Player") || !playero.equals("Human Player")) {
-                disableall();
-                new Handler().postDelayed(() -> botMove(), DELAY);
-            }
-        }
+        int move = board.indexOfChild(view) + 1;
+        handleMove(move, (ImageView) view);
     }
 
-    public void reset(View view) {
-        model.reset();
-        currentturn.setText("X's Turn");
-        ImageView currentbutton = (ImageView) findViewById(R.id.button1);
-        currentbutton.setEnabled(true);
-        currentbutton.setImageDrawable(null);
-        currentbutton = (ImageView) findViewById(R.id.button2);
-        currentbutton.setEnabled(true);
-        currentbutton.setImageDrawable(null);
-        currentbutton = (ImageView) findViewById(R.id.button3);
-        currentbutton.setEnabled(true);
-        currentbutton.setImageDrawable(null);
-        currentbutton = (ImageView) findViewById(R.id.button4);
-        currentbutton.setEnabled(true);
-        currentbutton.setImageDrawable(null);
-        currentbutton = (ImageView) findViewById(R.id.button5);
-        currentbutton.setEnabled(true);
-        currentbutton.setImageDrawable(null);
-        currentbutton = (ImageView) findViewById(R.id.button6);
-        currentbutton.setEnabled(true);
-        currentbutton.setImageDrawable(null);
-        currentbutton = (ImageView) findViewById(R.id.button7);
-        currentbutton.setEnabled(true);
-        currentbutton.setImageDrawable(null);
-        currentbutton = (ImageView) findViewById(R.id.button8);
-        currentbutton.setEnabled(true);
-        currentbutton.setImageDrawable(null);
-        currentbutton = (ImageView) findViewById(R.id.button9);
-        currentbutton.setEnabled(true);
-        currentbutton.setImageDrawable(null);
-
-        if (!playerx.equals("Human Player")) {
-            disableall();
-            new Handler().postDelayed(() -> botMove(), DELAY);
-        }
-    }
-
-    public void botMove() {
-        //play move
-        ImageView currentbutton = null;
-        int bot1move = 0;
+    private void botMove() {
+        int move = -1;
         if (model.nextPlayer() == 'x') {
-            switch(playerx) {
-                case "Random Bot" :
-                    bot1move = bot_2.findMove(model);
-                    break;
-                case "MiniMax Bot":
-                    bot1move = bot.findMove(model);
-                    break;
-                default:
-            }
+            move = playerx.findMove(model);
+        } else {
+            move = playero.findMove(model);
         }
-        else {
-            switch(playero) {
-                case "Random Bot" :
-                    bot1move = bot_2.findMove(model);
-                    break;
-                case "MiniMax Bot":
-                    bot1move = bot.findMove(model);
-                    break;
-                default:
-            }
-        }
-//        Log.i("Botmove", "" + bot1move);
-        switch (bot1move) {
-            case 1:
-                model.move(1);
-                currentbutton = (ImageView) findViewById(R.id.button1);
-                break;
-            case 2:
-                model.move(2);
-                currentbutton = (ImageView) findViewById(R.id.button2);
-                break;
-            case 3:
-                model.move(3);
-                currentbutton = (ImageView) findViewById(R.id.button3);
-                break;
-            case 4:
-                model.move(4);
-                currentbutton = (ImageView) findViewById(R.id.button4);
-                break;
-            case 5:
-                model.move(5);
-                currentbutton = (ImageView) findViewById(R.id.button5);
-                break;
-            case 6:
-                model.move(6);
-                currentbutton = (ImageView) findViewById(R.id.button6);
-                break;
-            case 7:
-                model.move(7);
-                currentbutton = (ImageView) findViewById(R.id.button7);
-                break;
-            case 8:
-                model.move(8);
-                currentbutton = (ImageView) findViewById(R.id.button8);
-                break;
-            case 9:
-                model.move(9);
-                currentbutton = (ImageView) findViewById(R.id.button9);
-                break;
-            default:
-        }
-        Log.i("bot", "" + bot1move);
+        ImageView currentbutton = (ImageView) board.getChildAt(move - 1);
+        handleMove(move, currentbutton);
+        enableTouch();
+    }
+
+    private void handleMove(int move, ImageView currentbutton) {
+        model.move(move);
         if (model.justPlayed() == 'o') {
-            currentbutton.setImageResource(R.drawable.download4);
+            currentbutton.setImageResource(R.drawable.o);
         } else {
             currentbutton.setImageResource(R.drawable.x);
         }
-        currentturn.setText((model.nextPlayer()+"").toUpperCase() +"'s Turn");
         currentbutton.setEnabled(false);
-        enableall();
-
-        if (!handleEnd()) {
-//            Log.i("BotMove", "Started");
-            if (!playerx.equals("Human Player") && !playero.equals("Human Player")) {
-                disableall();
-                new Handler().postDelayed(() -> botMove(), DELAY);
-            }
-        }
-    }
-    public void disableall() {
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-    }
-    public void disableButton() {
-        ImageView currentbutton;
-        currentbutton = (ImageView) findViewById(R.id.button1);
-        currentbutton.setEnabled(false);
-        currentbutton = (ImageView) findViewById(R.id.button2);
-        currentbutton.setEnabled(false);
-        currentbutton = (ImageView) findViewById(R.id.button3);
-        currentbutton.setEnabled(false);
-        currentbutton = (ImageView) findViewById(R.id.button4);
-        currentbutton.setEnabled(false);
-        currentbutton = (ImageView) findViewById(R.id.button5);
-        currentbutton.setEnabled(false);
-        currentbutton = (ImageView) findViewById(R.id.button6);
-        currentbutton.setEnabled(false);
-        currentbutton = (ImageView) findViewById(R.id.button7);
-        currentbutton.setEnabled(false);
-        currentbutton = (ImageView) findViewById(R.id.button8);
-        currentbutton.setEnabled(false);
-        currentbutton = (ImageView) findViewById(R.id.button9);
-        currentbutton.setEnabled(false);
-    }
-    public void enableall() {
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-    }
-    public boolean handleEnd() {
-        if (!model.getStatus().equals("")) {
-            TextView xwins = (TextView) findViewById(R.id.xwins);
-            TextView ties = (TextView) findViewById(R.id.ties);
-            TextView owins = (TextView) findViewById(R.id.owins);
+        currentturn.setText((model.nextPlayer() + "").toUpperCase() + "'s Turn");
+        if (model.getStatus() != Status.Incomplete) {
             xwins.setText("X wins: " + model.getXwins());
             owins.setText("O wins: " + model.getOwins());
             ties.setText("Ties: " + model.getTies());
-            currentturn.setText(model.getStatus());
+            switch (model.getStatus()) {
+                case Owins:
+                    currentturn.setText("O Wins!");
+                    break;
+                case Xwins:
+                    currentturn.setText("X Wins!");
+                    break;
+                case Tie:
+                    currentturn.setText("Tie!");
+                    break;
+                default:
+            }
             disableButton();
 //            Log.i("handleEnd", "Game Finsihed");
-            return true;
+            return;
         }
-        return false;
+        boolean isbot = false;
+        switch (model.nextPlayer()) {
+            case 'x':
+                if (playerx!=null) {
+                    isbot = true;
+                }
+                break;
+            case 'o':
+                if (playero!=null) {
+                    isbot = true;
+                }
+                break;
+            default:
+        }
+//            Log.i("BotMove", "Started");
+        if (isbot) {
+            disableTouch();
+            new Handler().postDelayed(() -> botMove(), DELAY);
+        }
     }
 }

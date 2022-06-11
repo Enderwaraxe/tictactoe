@@ -3,15 +3,18 @@ package com.kopybot.tictactoe;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class TicTacToeModel {
+enum Status {
+    Xwins, Owins, Tie, Incomplete
+}
+public class TicTacToeGame {
     private char[] board = new char[9];
     private ArrayList<Integer> trace = new ArrayList<>();
-    private String status = "";
+    private Status status = Status.Incomplete;
     private int xwins = 0;
     private int ties = 0;
     private int owins = 0;
 
-    public TicTacToeModel() {
+    public TicTacToeGame() {
         reset();
     }
 
@@ -40,7 +43,7 @@ public class TicTacToeModel {
         return trace;
     }
 
-    public String getStatus() {
+    public Status getStatus() {
         return status;
     }
 
@@ -48,16 +51,17 @@ public class TicTacToeModel {
         trace.add(x);
         board[x-1] = justPlayed();
         if (isWon()) {
-            status = (""+justPlayed()).toUpperCase() + "'s Wins!";
             if (justPlayed() =='x') {
+                status = Status.Xwins;
                 xwins++;
             }
             else {
+                status = Status.Owins;
                 owins++;
             }
         }
         else if(trace.size() >=9) {
-            status = "Tie!";
+            status = Status.Tie;
             ties++;
         }
     }
@@ -67,7 +71,7 @@ public class TicTacToeModel {
         for (int i = 0; i < 9; i++) {
             board[i] = ' ';
         }
-        status = "";
+        status = Status.Incomplete;
         trace.clear();
     }
 
@@ -111,8 +115,8 @@ public class TicTacToeModel {
         this.trace.addAll(trace);
     }
 
-    public TicTacToeModel deepCopy() {
-        TicTacToeModel copy = new TicTacToeModel();
+    public TicTacToeGame deepCopy() {
+        TicTacToeGame copy = new TicTacToeGame();
         copy.setBoard(board);
         copy.setTrace(trace);
         return copy;

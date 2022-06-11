@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
-public class BotMiniMax {
+public class BotMiniMax extends BotPlayer{
     private HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
-    public int findMove(TicTacToeModel model) {
+    public int findMove(TicTacToeGame model) {
         int[] options = new int[9];
         if (model.nextPlayer()== 'x') {
             for (int i = 0; i < 9; i++) {
@@ -22,7 +22,7 @@ public class BotMiniMax {
         }
         for (int i = 0; i < 9; i++) {
             if (!model.isTaken(i + 1)) {
-                TicTacToeModel x = model.deepCopy();
+                TicTacToeGame x = model.deepCopy();
                 x.move(i + 1);
                 options[i] = winlosscount(x);
                 }
@@ -55,7 +55,7 @@ public class BotMiniMax {
         Log.i("hash", "" + Arrays.toString(options) + " " + model.nextPlayer());
         return indexofbest.get((int) (Math.random()*indexofbest.size()))+1;
     }
-    public int winlosscount(TicTacToeModel model) {
+    public int winlosscount(TicTacToeGame model) {
         String b = Arrays.toString(model.getBoard());
         if (map.containsKey(b.hashCode())) {
             return map.get(b.hashCode());
@@ -71,7 +71,7 @@ public class BotMiniMax {
             }
         }
         else {
-            if (model.getStatus().equals("Tie!")) {
+            if (model.getStatus()==Status.Tie) {
                 return 0;
             }
         }
@@ -84,7 +84,7 @@ public class BotMiniMax {
         }
         for (int i = 0; i < 9; i++) {
             if (!model.isTaken(i+1)) {
-                TicTacToeModel x = model.deepCopy();
+                TicTacToeGame x = model.deepCopy();
                 x.move(i+1);
                 if (model.nextPlayer() == 'x') {
                     val = Math.max(winlosscount(x), val);
@@ -100,8 +100,8 @@ public class BotMiniMax {
         return val;
     }
     
-    public void start() {
-        TicTacToeModel empty = new TicTacToeModel();
+    public void boot() {
+        TicTacToeGame empty = new TicTacToeGame();
         findMove(empty);
 //        Log.i("hash", ""+map.size());
     }
